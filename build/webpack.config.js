@@ -14,8 +14,8 @@ const webpack = require('webpack');
 // 对构建速度分析
 const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 const smp = new SpeedMeasurePlugin();
-// 对构建解构分析
-const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer')
+// 对构建结果分析
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 
 const config = {
 	// 入口文件
@@ -172,7 +172,10 @@ const config = {
 	// 插件
 	plugins: [
 		// 对构建结果分析
-		new BundleAnalyzerPlugin(),  // 使用默认配置
+		new BundleAnalyzerPlugin({
+			analyzerMode: 'disabled', // 不启动展示打包报告的http服务器
+			generateStatsFile: true, // 是否生成stats.json文件
+		}),
 		// 把打包后的资源文件，例如：js 或者 css 文件可以自动引入到 Html 中
 		new HtmlWebpackPlugin({
 			// 模板html地址
