@@ -222,15 +222,17 @@ const config = {
 					// cache: true,
 					compress: {
 						warnings: true, // 是否去除warnig
-						// drop_console: process.env.BUILD_ENV === 'prod', // 是否去除console
+						drop_console: isProd, // 是否去除console
+						drop_debugger: isProd, // 移除自动断点功能
+						// pure_funcs: ['console.log', 'console.error'], //配置移除指定的指令，如console.log,alert等
 					},
-					// output: {
-					// 	comments: false,
-					// 	// comments: /Build in/i
-					// },
-					safari10: true,
+					// 删除注释 如果要在构建时去除注释，请使用以下配置
+					format: {
+						comments: false,
+					},
 				},
-				extractComments: false, // 启用/禁用剥离注释功能
+				// 是否将注释剥离到单独的文件中
+				extractComments: false,
 			}),
 			// 启动css压缩  一般在生产模式配置,开发环境不配置,可以通过环境来配置是否压缩css
 			new CssMinimizerPlugin({
@@ -247,8 +249,8 @@ const config = {
 				// ],
 			}),
 		],
-		// 如果还想在开发环境下启用 CSS 优化，请将 optimization.minimize 设置为 true:
-		// minimize: true,
+		// 告知 webpack 使用 TerserPlugin 或其它在 optimization.minimizer定义的插件压缩 bundle
+		minimize: true,
 	},
 };
 

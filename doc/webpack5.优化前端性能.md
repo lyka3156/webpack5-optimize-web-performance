@@ -107,6 +107,55 @@ module.exports = {
 
 ## 3. 压缩 js
 
+该插件使用 [terser](https://github.com/terser/terser) 来压缩 JavaScript
+
+webpack v5 开箱即带有最新版本的 [`terser-webpack-plugin`](https://webpack.docschina.org/plugins/terser-webpack-plugin/#root)。
+如果你使用的是 webpack v5 或更高版本，同时希望自定义配置，那么仍需要安装 `terser-webpack-plugin`。
+如果使用 webpack v4，则必须安装 `terser-webpack-plugin` v4 的版本
+
+1. exports 安装
+
+```js
+yarn add -D terser-webpack-plugin
+```
+
+2. 配置压缩 js 插件
+
+```js
+const TerserPlugin = require('terser-webpack-plugin');
+
+module.exports = {
+	// 优化
+	optimization: {
+		minimizer: [
+			// 在 webpack@5 中，你可以使用 `...` 语法来扩展现有的 minimizer（即 `terser-webpack-plugin`），将下一行取消注释
+			// `...`,
+			// https://github.com/webpack-contrib/terser-webpack-plugin#terseroptions
+			new TerserPlugin({
+				terserOptions: {
+					// parallel: true, // 启用/禁用多进程并发运行功能
+					// cache: true,
+					compress: {
+						warnings: true, // 是否去除warnig
+						drop_console: isProd, // 是否去除console
+						drop_debugger: isProd, // 移除自动断点功能
+						// pure_funcs: ['console.log', 'console.error'], //配置移除指定的指令，如console.log,alert等
+					},
+					// 删除注释 如果要在构建时去除注释，请使用以下配置
+					format: {
+						comments: false,
+					},
+				},
+				// 是否将注释剥离到单独的文件中
+				extractComments: false,
+			}),
+		],
+		// 告知 webpack 使用 TerserPlugin 或其它在 optimization.minimizer定义的插件压缩 bundle
+		minimize: true,
+	},
+};
+```
+
 ## 4. 清除无用的 CSS
 
 ## 5. Tree Shaking
