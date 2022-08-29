@@ -1,12 +1,12 @@
 import './index.css'; // css-loader
-import './index.less'; // less-loader
+import styles from './index.less'; // less-loader
 
 // 图片
 import logo from './assets/images/logo.jpg';
 // import { sum } from './utils/common.js';
 import { sum } from 'utils/common.js';
 const count = sum(1, 2);
-console.log('sum函数', count);
+console.log('sum函数', count, styles);
 
 const img = new Image();
 img.src = logo;

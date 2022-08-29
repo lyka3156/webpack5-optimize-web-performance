@@ -113,7 +113,7 @@ webpack v5 开箱即带有最新版本的 [`terser-webpack-plugin`](https://webp
 如果你使用的是 webpack v5 或更高版本，同时希望自定义配置，那么仍需要安装 `terser-webpack-plugin`。
 如果使用 webpack v4，则必须安装 `terser-webpack-plugin` v4 的版本
 
-1. exports 安装
+1. 安装插件
 
 ```js
 yarn add -D terser-webpack-plugin
@@ -157,6 +157,55 @@ module.exports = {
 ```
 
 ## 4. 清除无用的 CSS
+
+[purgecss-webpack-plugin](https://www.npmjs.com/package/purgecss-webpack-plugin) 会单独提取 CSS 并清除用不到的 CSS
+
+注意：
+
+-   必须配合[mini-css-extract-plugin](https://webpack.docschina.org/plugins/mini-css-extract-plugin#root)插件一起使用
+-   需要剔除无用 css 的目录，使用此插件，如果是一些公共的 css 文件，不需要剔除的 css 不需要配置剔除
+    -   像 body, > div 这种样式，你在模块中没有实际引用到的样式，也会剔除掉
+
+1. 安装插件
+
+```js
+yarn add -D purgecss-webpack-plugin
+```
+
+2. 修改 webpack 配置
+
+```js
+// 去除无用的css
+const path = require('path');
+const glob = require('glob');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const PurgecssWebpackPlugin = require('purgecss-webpack-plugin');
+
+// 需要剔除无用css的目录
+const PATHS = {
+	src: path.join(__dirname, 'src'),
+};
+
+module.exports = {
+	rules: [
+		{
+			test: /\.css$/,
+			use: [MiniCssExtractPlugin.loader, 'css-loader'],
+		},
+	],
+	plugins: [
+		// 该插件将CSS提取到单独的文件中。它会为每个chunk创造一个css文件。需配合loader一起使用
+		new MiniCssExtractPlugin({
+			filename: 'css/[name]_[contenthash:8].css',
+			// chunkFilename: 'css/[name]_[contenthash:8].css',
+		}),
+		// 清除用不到的 CSS
+		new PurgecssWebpackPlugin({
+			paths: glob.sync(`${PATHS.src}/**/*`, { nodir: true }),
+		}),
+	],
+};
+```
 
 ## 5. Tree Shaking
 

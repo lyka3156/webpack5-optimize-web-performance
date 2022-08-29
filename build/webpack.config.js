@@ -18,6 +18,14 @@ const smp = new SpeedMeasurePlugin();
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 // 区分生产和开发环境配置
 const isProd = process.env.NODE_ENV === 'prod';
+// 去除无用的css
+const PurgecssWebpackPlugin = require('purgecss-webpack-plugin');
+const glob = require('glob'); // 文件匹配模式
+
+// 需要剔除无用css的目录，如果是一些公共的css文件，不需要剔除的css不需要在这里配置
+const PATHS = {
+	src: path.join(__dirname, 'src'),
+};
 
 const config = {
 	// 入口文件
@@ -78,7 +86,17 @@ const config = {
 					MiniCssExtractPlugin.loader, // 生产环境下使用，开发环境还是推荐使用style-loader
 					'cache-loader', // 获取前面 loader 转换的结果
 					// 将 CSS 转化成 CommonJS 模块
-					'css-loader',
+					// 'css-loader',
+					{
+						loader: 'css-loader',
+						options: {
+							// css 启动模块化，防止css命名冲突
+							modules: {
+								// local就是样式名称
+								localIdentName: '[local]-[hash:base64:5]', // css module
+							},
+						},
+					},
 					// 使用 PostCSS 处理 CSS 的 loader, 里面可以配置 autoprefixer 添加 CSS 浏览器前缀
 					'postcss-loader',
 					// 将 Less 编译成 CSS
@@ -189,6 +207,10 @@ const config = {
 		new MiniCssExtractPlugin({
 			filename: 'css/[name]_[contenthash:8].css',
 			// chunkFilename: 'css/[name]_[contenthash:8].css',
+		}),
+		// 清除用不到的 CSS
+		new PurgecssWebpackPlugin({
+			paths: glob.sync(`${PATHS.src}/**/*`, { nodir: true }),
 		}),
 		// 拷贝文件或者目录
 		new CopyWebpackPlugin({
