@@ -107,8 +107,6 @@ module.exports = {
 
 ## 3. 压缩 js
 
-1. 安装 css-minimizer-webpack-plugin
-
 ## 4. 清除无用的 CSS
 
 ## 5. Tree Shaking
