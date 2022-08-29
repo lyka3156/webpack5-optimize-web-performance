@@ -86,17 +86,17 @@ const config = {
 					MiniCssExtractPlugin.loader, // 生产环境下使用，开发环境还是推荐使用style-loader
 					'cache-loader', // 获取前面 loader 转换的结果
 					// 将 CSS 转化成 CommonJS 模块
-					// 'css-loader',
-					{
-						loader: 'css-loader',
-						options: {
-							// css 启动模块化，防止css命名冲突
-							modules: {
-								// local就是样式名称
-								localIdentName: '[local]-[hash:base64:5]', // css module
-							},
-						},
-					},
+					'css-loader',
+					// {
+					// 	loader: 'css-loader',
+					// 	options: {
+					// 		// css 启动模块化，防止css命名冲突
+					// 		modules: {
+					// 			// local就是样式名称
+					// 			localIdentName: '[local]-[hash:base64:5]', // css module
+					// 		},
+					// 	},
+					// },
 					// 使用 PostCSS 处理 CSS 的 loader, 里面可以配置 autoprefixer 添加 CSS 浏览器前缀
 					'postcss-loader',
 					// 将 Less 编译成 CSS
