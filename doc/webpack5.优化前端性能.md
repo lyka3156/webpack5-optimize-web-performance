@@ -65,15 +65,11 @@ module.exports={
 
 这样再次执行打包的时候就只会在打包目录下面生成 stats.json 的打包结果分析文件了
 
-## 2. 压缩 js
-
-1. 安装 css-minimizer-webpack-plugin
-
-## 3. 压缩 css
+## 2. 压缩 css
 
 这个插件使用 cssnano 优化和压缩 CSS。
 
-就像 [optimize-css-assets-webpack-plugin](https://github.com/NMFR/optimize-css-assets-webpack-plugin) 一样，但在 source maps 和 assets 中使用查询字符串会更加准确，支持缓存和并发模式下运行
+就像 [optimize-css-assets-webpack-plugin](https://github.com/NMFR/optimize-css-assets-webpack-plugin) 一样，但在 `source maps` 和 `assets` 中使用查询字符串会更加准确，`支持缓存和并发模式下运行`
 
 1. 安装 [css-minimizer-webpack-plugin](https://webpack.docschina.org/plugins/css-minimizer-webpack-plugin/#root)
 
@@ -84,10 +80,34 @@ yarn add -D css-minimizer-webpack-plugin
 2. 配置压缩 css 插件
 
 ```js
-const a = (module.exports = {
-	plugins: [],
-});
+// 压缩css
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
+module.exports = {
+	optimization: {
+		minimizer: [
+			// 添加 css 压缩配置
+			new CssMinimizerPlugin({
+				// test: /\.foo\.css$/i, // 用来匹配文件
+				// include: /\/includes/, // 包含的文件
+				// exclude: /\/excludes/, // 排除的文件
+				// parallel: true, // 进程并发执行，提升构建速度。 运行时默认的并发数：os.cpus().length - 1
+				// // 移除所有注释（包括以 /*! 开头的注释）
+				// preset: [
+				// 	'default',
+				// 	{
+				// 		discardComments: { removeAll: true },
+				// 	},
+				// ],
+			}),
+		],
+		minimize: true,
+	},
+};
 ```
+
+## 3. 压缩 js
+
+1. 安装 css-minimizer-webpack-plugin
 
 ## 4. 清除无用的 CSS
 

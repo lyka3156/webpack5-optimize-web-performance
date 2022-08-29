@@ -16,6 +16,8 @@ const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
 const smp = new SpeedMeasurePlugin();
 // 对构建结果分析
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+// 区分生产和开发环境配置
+const isProd = process.env.NODE_ENV === 'prod';
 
 const config = {
 	// 入口文件
@@ -25,7 +27,7 @@ const config = {
 	mode: 'production',
 
 	// 配置source map       开发:'cheap-module-source-map'  生产:'none'
-	devtool: 'cheap-module-source-map',
+	devtool: isProd ? 'eval' : 'cheap-module-source-map',
 
 	// 打包输出
 	output: {
@@ -231,7 +233,19 @@ const config = {
 				extractComments: false, // 启用/禁用剥离注释功能
 			}),
 			// 启动css压缩  一般在生产模式配置,开发环境不配置,可以通过环境来配置是否压缩css
-			new CssMinimizerPlugin(),
+			new CssMinimizerPlugin({
+				// test: /\.foo\.css$/i, // 用来匹配文件
+				// include: /\/includes/, // 包含的文件
+				// exclude: /\/excludes/, // 排除的文件
+				// parallel: true, // 进程并发执行，提升构建速度。 运行时默认的并发数：os.cpus().length - 1
+				// // 移除所有注释（包括以 /*! 开头的注释）
+				// preset: [
+				// 	'default',
+				// 	{
+				// 		discardComments: { removeAll: true },
+				// 	},
+				// ],
+			}),
 		],
 		// 如果还想在开发环境下启用 CSS 优化，请将 optimization.minimize 设置为 true:
 		// minimize: true,
