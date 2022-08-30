@@ -304,3 +304,249 @@ console.log(str);
 ```js
 console.log('hello');
 ```
+
+## 7. 代码分割
+
+-   对于大的 Web 应用来讲，将所有的代码都放在一个文件中显然是不够有效的，特别是当你的某些代码块是在某些特殊的时候才会被用到。
+-   webpack 有一个功能就是将你的代码库分割成 chunks 语块，当代码运行到需要它们的时候再进行加载
+
+### 1. 入口点分割
+
+-   配置多个打包入口，多页打包
+-   Entry Points：入口文件设置的时候可以配置
+-   这种方法的问题
+    -   如果入口 chunks 之间包含重复的模块(lodash)，那些重复模块都会被引入到各个 bundle 中
+    -   不够灵活，并且不能将核心应用程序逻辑进行动态拆分代码
+
+```js
+entry: {
+    index: "./src/index.js",
+    login: "./src/login.js"
+}
+```
+
+### 2. splitChunks 分包配置, 提取公共代码 [文档地址](https://webpack.docschina.org/plugins/split-chunks-plugin#optimizationsplitchunks)
+
+-   从 webpack v4 开始，移除了 CommonsChunkPlugin，取而代之的是 optimization.splitChunks
+-   默认情况下，它只会影响到按需加载的 chunks，因为修改 initial chunks 会影响到项目的 HTML 文件中的脚本标签。
+
+#### 1. 为什么需要提取公共代码
+
+-   网站有多个页面,每个页面包含很多公共代码,导致相同的资源被重复的加载，浪费用户的流量和服务器的成本；
+-   每个页面需要加载的资源太大，导致网页首屏加载缓慢，影响用户体验。
+-   如果能把公共代码抽离成单独文件进行加载能进行优化，可以优化网页首屏加载速度,减少网络传输流量，降低服务器成本,
+
+#### 2. 如何提取公共代码
+
+-   基础类库，方便长期缓存
+-   页面之间的公用代码
+-   各个页面单独生成文件
+
+#### 3. 使用 splitChunks 提取公共代码
+
+##### 1. module chunk bundle
+
+-   module：就是 js 的模块化 webpack 支持 commonJS、ES6 等模块化规范，简单来说就是你通过 import 语句引入的代码
+-   chunk: chunk 是 webpack 根据功能拆分出来的，包含三种情况
+    -   你的项目入口（entry）
+    -   通过 import()动态引入的代码
+    -   通过 splitChunks 拆分出来的代码
+-   bundle：bundle 是 webpack 打包之后的各个文件，一般就是和 chunk 是一对一的关系，bundle 就是对 chunk 进行编译压缩打包等处理之后的产出
+
+##### 2. splitChunks 默认配置
+
+webpack 默认 将根据以下条件自动拆分 chunks
+
+-   新的 chunk 可以被共享，或者模块来自于 node_modules 文件夹
+-   新的 chunk 体积大于 20kb（在进行 min+gz 之前的体积）
+-   当按需加载 chunks 时，并行请求的最大数量小于或等于 30
+-   当加载初始化页面时，并发请求的最大数量小于或等于 30
+
+当尝试满足最后两个条件时，最好使用较大的 chunks
+
+`webpack配置`
+
+```js
+module.exports = {
+	//...
+	optimization: {
+		splitChunks: {
+			chunks: 'async', // 有效值为 `all`，`async` 和 `initial`
+			minSize: 20000, // 生成 chunk 的最小体积（≈ 20kb)
+			minRemainingSize: 0, // 确保拆分后剩余的最小 chunk 体积超过限制来避免大小为零的模块
+			minChunks: 1, // 拆分前必须共享模块的最小 chunks 数。
+			maxAsyncRequests: 30, // 最大的按需(异步)加载次数
+			maxInitialRequests: 30, // 打包后的入口文件加载时，还能同时加载js文件的数量（包括入口文件）
+			enforceSizeThreshold: 50000,
+			cacheGroups: {
+				// 配置提取模块的方案
+				defaultVendors: {
+					test: /[\/]node_modules[\/]/,
+					priority: -10,
+					reuseExistingChunk: true,
+				},
+				default: {
+					minChunks: 2,
+					priority: -20,
+					reuseExistingChunk: true,
+				},
+			},
+		},
+	},
+};
+```
+
+##### 3. splitChunks 项目中的配置
+
+```js
+const config = {
+	//...
+	optimization: {
+		splitChunks: {
+			cacheGroups: {
+				// 配置提取模块的方案
+				default: false,
+				styles: {
+					name: 'styles',
+					test: /\.(s?css|less|sass)$/,
+					chunks: 'all',
+					enforce: true,
+					priority: 10,
+				},
+				common: {
+					name: 'chunk-common',
+					chunks: 'all',
+					minChunks: 2,
+					maxInitialRequests: 5,
+					minSize: 0,
+					priority: 1,
+					enforce: true,
+					reuseExistingChunk: true,
+				},
+				vendors: {
+					name: 'chunk-vendors',
+					test: /[\\/]node_modules[\\/]/,
+					chunks: 'all',
+					priority: 2,
+					enforce: true,
+					reuseExistingChunk: true,
+				},
+				// ... 根据不同项目再细化拆分内容
+			},
+		},
+	},
+};
+```
+
+##### 4. 测试案例
+
+`webpack配置`
+
+```js
+// webpack.config.js
+module.exports = {
+	entry: {
+		page1: './src/page1.js',
+		page2: './src/page2.js',
+		page3: './src/page3.js',
+	},
+	optimization: {
+		splitChunks: {
+			chunks: 'all', //默认作用于异步chunk，值为all/initial/async
+			minSize: 0, //默认值是30kb,代码块的最小尺寸
+			minChunks: 1, //被多少模块共享,在分割之前模块的被引用次数
+			maxAsyncRequests: 2, //限制异步模块内部的并行最大请求数的，说白了你可以理解为是每个import()它里面的最大并行请求数量
+			maxInitialRequests: 4, //限制入口的拆分数量
+			name: true, //打包后的名称，默认是chunk的名字通过分隔符（默认是～）分隔开，如vendor~
+			automaticNameDelimiter: '~', //默认webpack将会使用入口名和代码块的名称生成命名,比如 'vendors~main.js'
+			cacheGroups: {
+				//设置缓存组用来抽取满足不同规则的chunk,下面以生成common为例
+				vendors: {
+					chunks: 'all',
+					test: /node_modules/, //条件
+					priority: -10, ///优先级，一个chunk很可能满足多个缓存组，会被抽取到优先级高的缓存组中,为了能够让自定义缓存组有更高的优先级(默认0),默认缓存组的priority属性为负值.
+				},
+				commons: {
+					chunks: 'all',
+					minSize: 0, //最小提取字节数
+					minChunks: 2, //最少被几个chunk引用
+					priority: -20,
+				},
+			},
+		},
+	},
+};
+```
+
+src\page1.js
+
+```js
+import utils1 from './page1';
+import utils2 from './page2';
+import $ from 'jquery';
+console.log(utils1, utils2, $);
+import(/* webpackChunkName: "asyncModule1" */ './asyncModule1');
+```
+
+src\page2.js
+
+```js
+import utils1 from './page1';
+import utils2 from './page2';
+import $ from 'jquery';
+console.log(utils1, utils2, $);
+```
+
+src\page3.js
+
+```js
+import utils1 from './page1';
+import utils3 from './page3';
+import $ from 'jquery';
+console.log(utils1, utils3, $);
+```
+
+src\page1.js
+
+```js
+console.log('page1');
+```
+
+src\page2.js
+
+```js
+console.log('page2');
+```
+
+src\page3.js
+
+```js
+console.log('page3');
+```
+
+src\asyncModule1.js
+
+```js
+import _ from 'lodash';
+console.log(_);
+```
+
+                                 Asset       Size                     Chunks             Chunk Names
+                 asyncModule1.chunk.js  740 bytes               asyncModule1  [emitted]  asyncModule1
+                            index.html  498 bytes                             [emitted]
+                              page1.js   10.6 KiB                      page1  [emitted]  page1
+                  page1~page2.chunk.js  302 bytes                page1~page2  [emitted]  page1~page2
+            page1~page2~page3.chunk.js  308 bytes          page1~page2~page3  [emitted]  page1~page2~page3
+                              page2.js   7.52 KiB                      page2  [emitted]  page2
+                              page3.js   7.72 KiB                      page3  [emitted]  page3
+         vendors~asyncModule1.chunk.js    532 KiB       vendors~asyncModule1  [emitted]  vendors~asyncModule1
+    vendors~page1~page2~page3.chunk.js    282 KiB  vendors~page1~page2~page3  [emitted]  vendors~page1~page2~page3
+    Entrypoint page1 = vendors~page1~page2~page3.chunk.js page1~page2~page3.chunk.js page1~page2.chunk.js page1.js
+    Entrypoint page2 = vendors~page1~page2~page3.chunk.js page1~page2~page3.chunk.js page1~page2.chunk.js page2.js
+    Entrypoint page3 = vendors~page1~page2~page3.chunk.js page1~page2~page3.chunk.js page3.js
+
+![webpack代码分割](http://img.zhufengpeixun.cn/splitChunks.jpg)
+
+### 3. 代码懒加载
+
+### 4. prefetch 和 preload
