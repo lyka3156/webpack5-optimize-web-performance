@@ -4,38 +4,17 @@ const resolvePath = (p) => path.resolve(__dirname, p);
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 // 该插件将CSS提取到单独的文件中。它会为每个chunk创造一个css文件。需配合loader一起使用
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-// 压缩css
-const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 // 压缩js
 const TerserPlugin = require('terser-webpack-plugin');
-// 将已存在的单个文件或整个目录复制到打包目录
-const CopyWebpackPlugin = require('copy-webpack-plugin');
-const webpack = require('webpack');
-// 对构建速度分析
-const SpeedMeasurePlugin = require('speed-measure-webpack-plugin');
-const smp = new SpeedMeasurePlugin();
-// 对构建结果分析
-const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
-// 区分生产和开发环境配置
-const isProd = process.env.NODE_ENV === 'prod';
-// 去除无用的css
-const PurgecssWebpackPlugin = require('purgecss-webpack-plugin');
-const glob = require('glob'); // 文件匹配模式
-
-// 需要剔除无用css的目录，如果是一些公共的css文件，不需要剔除的css不需要在这里配置
-const PATHS = {
-	src: path.join(__dirname, 'src'),
-};
-
 const config = {
 	// 入口文件
 	entry: './src/index.js',
 
-	// 开发模式打包     development/production
+	// 区分模式     development/production
 	mode: 'production',
 
 	// 配置source map       开发:'cheap-module-source-map'  生产:'none'
-	devtool: isProd ? 'eval' : 'cheap-module-source-map',
+	// devtool: isProd ? 'eval' : 'cheap-module-source-map',
 
 	// 打包输出
 	output: {
@@ -191,11 +170,6 @@ const config = {
 
 	// 插件
 	plugins: [
-		// 对构建结果分析
-		new BundleAnalyzerPlugin({
-			analyzerMode: 'disabled', // 不启动展示打包报告的http服务器
-			generateStatsFile: true, // 是否生成stats.json文件
-		}),
 		// 把打包后的资源文件，例如：js 或者 css 文件可以自动引入到 Html 中
 		new HtmlWebpackPlugin({
 			// 模板html地址
@@ -208,27 +182,6 @@ const config = {
 			filename: 'css/[name]_[contenthash:8].css',
 			// chunkFilename: 'css/[name]_[contenthash:8].css',
 		}),
-		// 清除用不到的 CSS
-		new PurgecssWebpackPlugin({
-			paths: glob.sync(`${PATHS.src}/**/*`, { nodir: true }),
-		}),
-		// 拷贝文件或者目录
-		new CopyWebpackPlugin({
-			patterns: [
-				// from: 从哪里  to: 到哪里
-				{ from: 'src/static', to: 'static' },
-			],
-		}),
-		// 定义全局变量
-		new webpack.DefinePlugin({
-			PRODUCTION: JSON.stringify(true), // true
-			VERSION: JSON.stringify('5fa3b9'), // '5fa3b9'
-			BROWSER_SUPPORTS_HTML5: true, // true
-			TWO: '1+1', // 2
-			'typeof window': JSON.stringify('object'), // `object`
-			// 用来区分环境
-			// 'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
-		}),
 	],
 
 	// 优化
@@ -238,42 +191,14 @@ const config = {
 			// `...`,
 			// 自定义配置压缩js的规则,不使用webpack5自带的压缩js规则
 			// https://github.com/webpack-contrib/terser-webpack-plugin#terseroptions
-			new TerserPlugin({
-				terserOptions: {
-					// parallel: true, // 启用/禁用多进程并发运行功能
-					// cache: true,
-					compress: {
-						warnings: true, // 是否去除warnig
-						drop_console: isProd, // 是否去除console
-						drop_debugger: isProd, // 移除自动断点功能
-						// pure_funcs: ['console.log', 'console.error'], //配置移除指定的指令，如console.log,alert等
-					},
-					// 删除注释 如果要在构建时去除注释，请使用以下配置
-					format: {
-						comments: false,
-					},
-				},
-				// 是否将注释剥离到单独的文件中
-				extractComments: false,
-			}),
-			// 启动css压缩  一般在生产模式配置,开发环境不配置,可以通过环境来配置是否压缩css
-			new CssMinimizerPlugin({
-				// test: /\.foo\.css$/i, // 用来匹配文件
-				// include: /\/includes/, // 包含的文件
-				// exclude: /\/excludes/, // 排除的文件
-				// parallel: true, // 进程并发执行，提升构建速度。 运行时默认的并发数：os.cpus().length - 1
-				// // 移除所有注释（包括以 /*! 开头的注释）
-				// preset: [
-				// 	'default',
-				// 	{
-				// 		discardComments: { removeAll: true },
-				// 	},
-				// ],
-			}),
+			new TerserPlugin(),
 		],
 		// 告知 webpack 使用 TerserPlugin 或其它在 optimization.minimizer定义的插件压缩 bundle
-		minimize: true,
+		// minimize: true,
+
+		// usedExports为true可以标记哪些代码使用了，哪些代码未被使用，压缩的时候标记为未被使用的就会被删除
+		usedExports: true,
 	},
 };
 
-module.exports = smp.wrap(config);
+module.exports = config;

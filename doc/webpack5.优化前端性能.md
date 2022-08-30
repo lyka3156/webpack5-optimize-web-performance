@@ -201,12 +201,82 @@ module.exports = {
 		}),
 		// 清除用不到的 CSS
 		new PurgecssWebpackPlugin({
-			paths: glob.sync(`${PATHS.src}/**/*`, { nodir: true }),
+			paths: glob.sync(
+				`${PATHS.src}/**/*`,
+				// 不匹配目录，只匹配文件
+				{ nodir: true }
+			),
 		}),
 	],
 };
 ```
 
-## 5. Tree Shaking
+## 5. Tree Shaking [文档地址](https://webpack.docschina.org/guides/tree-shaking/#root)
+
+-   一个模块可以有多个方法，只要其中某个方法使用到了，则整个文件都会被打到 bundle 里面去，tree shaking 就是只把用到的方法打入 bundle,没用到的方法会 uglify 阶段擦除掉
+-   原理是利用 es6 模块的特点,只能作为模块顶层语句出现,import 的模块名只能是字符串常量
+-   新的 webpack 4 正式版本扩展了此检测能力，通过 package.json 的 "sideEffects" 属性作为标记
+
+### 5.1 开发环境下的配置
+
+-   开发环境配置只是标记了哪些需要删除的“未引用代码(dead code)”
+
+```js
+// webpack.config.js
+module.exports = {
+	// ...
+	mode: 'development',
+	optimization: {
+		//  usedExports为true可以标记哪些代码使用了，哪些代码未被使用，压缩的时候标记为未被使用的就会被删除
+		usedExports: true,
+	},
+};
+```
+
+### 5.2 生产环境下的配置
+
+-   通过 import 和 export 语法，我们已经找出需要删除的“未引用代码(dead code)”，然而，不仅仅是要找出，还要在 bundle 中删除它们。为此，我们需要将 mode 配置选项设置为 production。
+
+-   在生产环境下，Webpack 默认会添加 `Tree Shaking` 的配置，因此只需写一行 `mode: 'production'` 即可。
+
+```js
+// webpack.config.js
+module.exports = {
+	// ...
+	mode: 'production',
+};
+```
+
+### 5.3 将文件标记为 side-effect-free(无副作用)
+
+在一个纯粹的 ESM 模块世界中，很容易识别出哪些文件有副作用。然而，我们的项目无法达到这种纯度，所以，此时有必要提示 webpack compiler 哪些代码是“纯粹部分”。
+
+通过 `package.json` 的 `"sideEffects"` 属性，来实现这种方式。
+
+sideEffects 的几种配置方式如下:
+
+-   sideEffects 默认为 true， 告诉 Webpack ，所有文件都有副作用，他们不能被 Tree Shaking。
+-   sideEffects 为 false 时，告诉 Webpack ，没有文件是有副作用的，他们都可以 Tree Shaking。
+-   sideEffects 为一个数组时，告诉 Webpack ，数组中那些文件不要进行 Tree Shaking，其他的可以 Tree Shaking。
+
+```js
+// package.json
+{
+  "sideEffects": false,
+  // ...
+}
+```
+
+如果所有代码都不包含副作用，我们就可以简单地将该属性标记为 false，来告知 webpack 它可以安全地删除未用到的 export。
+
+> Tip
+> 注意，所有导入文件都会受到 tree shaking 的影响。这意味着，如果在项目中使用类似 css-loader 并 import 一个 CSS 文件，则需要将其添加到 side effect 列表中，以免在生产模式中无意中将它删除：
+
+```js
+{
+  "name": "your-project",
+  "sideEffects": ["./src/some-side-effectful-file.js", "*.css",]
+}
+```
 
 ## 6. Scope Hoisting

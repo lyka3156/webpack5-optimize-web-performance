@@ -4,6 +4,10 @@
 	"main": "index.js",
 	"author": "lyka3156 <1210167160@qq.com>",
 	"license": "MIT",
+	"sideEffects": [
+		"./src/*.css",
+		"./src/*.less"
+	],
 	"scripts": {
 		"dev": "webpack serve --config ./build/webpack.config.js",
 		"build": "cross-env NODE_ENV=prod webpack --config ./build/webpack.config.js"
