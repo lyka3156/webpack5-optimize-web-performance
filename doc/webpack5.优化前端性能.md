@@ -280,3 +280,27 @@ sideEffects 的几种配置方式如下:
 ```
 
 ## 6. Scope Hoisting
+
+-   Scope Hoisting 即作用域提升，原理是将所有的模块按照引用顺序放在一个函数作用域里，并重命名防止命名冲突，`通过这种方式可以减少函数声明和内存开销`
+-   Scope Hoisting 可以让 Webpack 打包出来的代码文件更小、运行的更快
+-   这个功能在 mode 为 production 下默认开启,开发环境要用 [webpack.optimize.ModuleConcatenationPlugin](https://webpack.docschina.org/plugins/module-concatenation-plugin/#root) 插件
+-   只支持 es6 代码
+
+hello.js
+
+```js
+export default 'Hello';
+```
+
+index.js
+
+```js
+import str from './hello.js';
+console.log(str);
+```
+
+最终打包输出的`main.js`
+
+```js
+console.log('hello');
+```

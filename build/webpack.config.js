@@ -197,7 +197,7 @@ const config = {
 		// minimize: true,
 
 		// usedExports为true可以标记哪些代码使用了，哪些代码未被使用，压缩的时候标记为未被使用的就会被删除
-		usedExports: true,
+		// usedExports: true,
 	},
 };
 
