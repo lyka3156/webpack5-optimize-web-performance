@@ -438,6 +438,113 @@ const config = {
 };
 ```
 
-### 3. 代码懒加载
+### 3. 代码懒加载(按需加载)
 
-### 4. prefetch 和 preload
+针对首屏加载不太需要的一些资源，我们可以通过懒加载的方式去实现
+
+#### 1. webpack 的懒加载
+
+`hello.js`
+
+```js
+module.exports = 'hello';
+```
+
+`index.js`
+
+```js
+document.querySelector('#clickBtn').addEventListener('click', () => {
+	import('./hello').then((result) => {
+		console.log(result.default);
+	});
+});
+```
+
+`index.html`
+
+```js
+<button id="clickBtn">懒加载资源</button>
+```
+
+`点击前加载的资源如下`
+![点击前](https://cdn.nlark.com/yuque/0/2022/png/566044/1661909892578-a7abde64-7541-47d9-a75c-6696ccedbfb9.png)
+
+`点击后加载的资源如下`
+![点击前](https://cdn.nlark.com/yuque/0/2022/png/566044/1661909905065-990ed74e-3877-48f2-80c8-fe2ef83c35d6.png)
+
+#### 2. react 的懒加载
+
+`index.js` 入口文件配置
+
+```js
+// src/index.js
+import React, { Component, Suspense } from 'react';
+import ReactDOM from 'react-dom';
+import Loading from './components/Loading';
+// lazy的简单实现原理
+/* function lazy(loadFunction) {
+  return class LazyComponent extends React.Component {
+    state = { Comp: null };
+    componentDidMount() {
+      loadFunction().then((result) => {
+        this.setState({ Comp: result.default });
+      });
+    }
+    render() {
+      let Comp = this.state.Comp;
+      return Comp ? <Comp {...this.props} /> : null;
+    }
+  };
+} */
+// 需要懒加载组件
+const AppTitle = React.lazy(() =>
+	import(/* webpackChunkName: "title" */ './components/Title')
+);
+
+class App extends Component {
+	state = {
+		visible: false,
+	};
+	show = () => {
+		this.setState({ visible: true });
+	};
+	render() {
+		return (
+			<>
+				{/* 懒加载组件显示的地方 */}
+				{this.state.visible && (
+					<Suspense fallback={<Loading />}>
+						<AppTitle />
+					</Suspense>
+				)}
+				<button onClick={this.show}>加载</button>
+			</>
+		);
+	}
+}
+ReactDOM.render(<App />, document.querySelector('#root'));
+```
+
+`Loading.js`
+
+-   懒加载资源未加载完成的过渡页面
+
+```js
+// src\components\Loading.js
+import React from 'react';
+export default (props) => {
+	return <p>Loading</p>;
+};
+```
+
+`Title.js`
+
+-   需要懒加载的组件
+
+```js
+// src\components\Title.js
+import React from 'react';
+export default (props) => {
+	return <p>Title</p>;
+};
+```
