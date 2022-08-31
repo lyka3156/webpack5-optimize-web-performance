@@ -548,3 +548,105 @@ export default (props) => {
 	return <p>Title</p>;
 };
 ```
+
+### 4. prefetch 和 preload
+
+上面我们使用异步加载的方式引入资源,假如我们需要异步加载的文件比较大,在点击的时候去加载也会影响用户的体验,这个时候可以考虑使用 prefetch 来进行预拉取
+
+#### 1. prefetch
+
+1.  概念:
+
+-   (预拉取)：浏览器空闲的时候进行资源的拉取
+
+2. 作用或者场景:
+
+-   它的作用是告诉浏览器未来可能会使用到的某个资源，浏览器就会在闲时去加载对应的资源，若能预测到用户的行为，比如懒加载，点击到其它页面等则相当于提前预加载了需要的资源
+
+3. 用法:
+
+-   在资源上添加预先加载的注释，你指明该模块需要立即被使用
+
+`html` 中使用
+
+```js
+<link rel="prefetch" href="js/utils.js" as="script">
+```
+
+`react` 中
+
+```js
+button.addEventListener('click', () => {
+	import(
+		`./utils.js`
+		/* webpackPrefetch: true */
+		/* webpackChunkName: "utils" */
+	).then((result) => {
+		result.default.log('hello');
+	});
+});
+```
+
+`改造一下上面懒加载获取的代码`
+
+-   这样的话,浏览器会在空闲时间加载 hello 文件,不用我们自己去点击的时候再加载文件了
+
+```js
+document.querySelector('#clickBtn').addEventListener('click', () => {
+	import(/* webpackPrefetch: true */ './hello').then((result) => {
+		console.log(result.default);
+	});
+});
+```
+
+#### 2. preload
+
+1. 概念:
+
+-   preload (预加载)：提前加载后面会用到的关键资源
+-   因为会提前拉取资源，如果不是特殊需要，谨慎使用
+
+2. 场景:
+
+-   preload 通常用于本页面要用到的关键资源，包括`关键 js、字体、css `文件
+-   preload 将会把资源得下载顺序权重提高，使得关键数据提前下载好,优化页面打开速度
+
+3. 用法:
+
+-   在资源上添加预先加载的注释，你指明该模块需要立即被使用
+
+`html` 中
+
+```js
+<link rel="preload" as="script" href="js/utils.js">
+```
+
+`react` 中
+
+```js
+import(
+	`./utils.js`
+	/* webpackPreload: true */
+	/* webpackChunkName: "utils" */
+);
+```
+
+#### 3. 加载的优先级
+
+-   一个资源的加载的优先级被分为五个级别,分别是
+    -   Highest 最高
+    -   High 高
+    -   Medium 中等
+    -   Low 低
+    -   Lowest 最低
+-   异步/延迟/插入的脚本（无论在什么位置）在网络优先级中是 Low
+    -   Preload, High
+    -   Prefetch, Medium
+    -   & Priorities Low
+    -   in chrome Lowest
+
+#### 4. prefetch 和 preload 的区别
+
+-   preload 是告诉浏览器页面必定需要的资源，浏览器一定会加载这些资源
+-   而 prefetch 是告诉浏览器页面可能需要的资源，浏览器不一定会加载这些资源
+-   所以建议：对于当前页面很有必要的资源使用 preload,对于可能在将来的页面中使用的资源使用 prefetch
