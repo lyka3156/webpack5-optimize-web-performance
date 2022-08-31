@@ -1,20 +1,15 @@
 const path = require('path');
 const resolvePath = (p) => path.resolve(__dirname, p);
-// HtmlWebpackPlugin帮助你创建html文件，并自动引入打包输出的bundles文件。支持html压缩。
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-// 该插件将CSS提取到单独的文件中。它会为每个chunk创造一个css文件。需配合loader一起使用
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-// 压缩js
-const TerserPlugin = require('terser-webpack-plugin');
 const config = {
 	// 入口文件
-	entry: './src/index.js',
+	entry: {
+		page1: './src/page1.js',
+		page2: './src/page2.js',
+		page3: './src/page3.js',
+	},
 
 	// 区分模式     development/production
-	mode: 'production',
-
-	// 配置source map       开发:'cheap-module-source-map'  生产:'none'
-	// devtool: isProd ? 'eval' : 'cheap-module-source-map',
+	mode: 'development',
 
 	// 打包输出
 	output: {
@@ -41,163 +36,32 @@ const config = {
 		// },
 	},
 
-	// 模块解析配置
-	resolve: {
-		// 取别名
-		alias: {
-			'@': resolvePath('../src'),
-			utils: resolvePath('../src/utils'),
-			static: resolvePath('../src/static'),
-			// ...
-		},
-	},
-
-	// 模块匹配规则: 在这里为模块配置loader
-	module: {
-		rules: [
-			{
-				// 匹配所有的 css 文件
-				test: /\.(css|less)$/i,
-				use: [
-					// 将 JS 字符串生成为 style 节点
-					// 'style-loader',
-					// MiniCssExtractPlugin.loader的作用就是把css-loader处理好的样式资源（js文件内），单独提取出来 成为css样式文件
-					MiniCssExtractPlugin.loader, // 生产环境下使用，开发环境还是推荐使用style-loader
-					'cache-loader', // 获取前面 loader 转换的结果
-					// 将 CSS 转化成 CommonJS 模块
-					'css-loader',
-					// {
-					// 	loader: 'css-loader',
-					// 	options: {
-					// 		// css 启动模块化，防止css命名冲突
-					// 		modules: {
-					// 			// local就是样式名称
-					// 			localIdentName: '[local]-[hash:base64:5]', // css module
-					// 		},
-					// 	},
-					// },
-					// 使用 PostCSS 处理 CSS 的 loader, 里面可以配置 autoprefixer 添加 CSS 浏览器前缀
-					'postcss-loader',
-					// 将 Less 编译成 CSS
-					'less-loader',
-				],
-			},
-			{
-				// 匹配字体文件
-				test: /\.(woff2?|eot|ttf|otf)(\?.*)?$/i,
-				// 发送一个单独的文件并导出 URL。之前通过使用 file-loader 实现。
-				type: 'asset/resource',
-				generator: {
-					// 输出文件位置以及文件名
-					filename: 'fonts/[name]_[hash:8][ext]',
-				},
-				// parser: {
-				// 	dataUrlCondition: {
-				// 		maxSize: 10 * 1024, // 超过10kb不转 base64
-				// 	},
-				// },
-			},
-			{
-				// 匹配图片文件
-				test: /\.(png|jpg|jpeg|gif|svg)$/i,
-				// 在导出一个 data URI 和发送一个单独的文件之间自动选择。之前通过使用 url-loader，并且配置资源体积限制实现。
-				type: 'asset',
-				generator: {
-					// 输出文件位置以及文件名
-					filename: 'images/[name]_[hash:8][ext]',
-					// 打包之后图片的访问公共前缀
-					// publicPath: '../',
-				},
-				parser: {
-					dataUrlCondition: {
-						maxSize: 10 * 1024, // 超过10kb不转 base64
-					},
-				},
-			},
-			{
-				// 匹配js文件
-				test: /\.m?js$/,
-				// 包含哪些目录
-				include: resolvePath('../src'),
-				// 不包含哪些目录   exclude逼include优先级高
-				exclude: /(node_modules)/,
-				use: [
-					{
-						loader: 'thread-loader', // 开启多进程打包
-						options: {
-							// 产生的 worker 的数量，默认是 (cpu 核心数 - 1)，或者，
-							// 在 require('os').cpus() 是 undefined 时回退至 1
-							workers: 3,
-						},
-					},
-					{
-						loader: 'babel-loader',
-						options: {
-							// 将 babel-loader 提速至少两倍。这会将转译的结果缓存到文件系统中,第一次构建慢,缓存后构建快
-							cacheDirectory: true,
-						},
-					},
-				],
-			},
-		],
-	},
-
-	// 开发服务器
-	devServer: {
-		// 运行代码的目录   老版写法: 		contentBase: resolvePath('dist'),
-		static: {
-			directory: resolvePath('dist'),
-		},
-		// 为每个静态文件开启gzip压缩
-		compress: true,
-		host: 'localhost', // 域名
-		port: 9000, // 端口号
-		// open: true, // 自动打开浏览器
-		hot: true, //开启HMR功能
-		// 设置代理
-		proxy: {
-			// 一旦devServer(9000端口)接收到/api/xxx的请求，就会用devServer起的服务把请求转发到另外一个服务器（3000）
-			// 以此来解决开发中的跨域问题
-			api: {
-				target: 'htttp://localhost:3000',
-				// 发送请求时，请求路径重写：将/api/xxx  --> /xxx （去掉/api）
-				pathRewrite: {
-					'^api': '',
-				},
-			},
-		},
-	},
-
-	// 插件
-	plugins: [
-		// 把打包后的资源文件，例如：js 或者 css 文件可以自动引入到 Html 中
-		new HtmlWebpackPlugin({
-			// 模板html地址
-			template: resolvePath('../src/index.html'),
-			// 输出后的html文件名
-			filename: 'index.html',
-		}),
-		// 该插件将CSS提取到单独的文件中。它会为每个chunk创造一个css文件。需配合loader一起使用
-		new MiniCssExtractPlugin({
-			filename: 'css/[name]_[contenthash:8].css',
-			// chunkFilename: 'css/[name]_[contenthash:8].css',
-		}),
-	],
-
 	// 优化
 	optimization: {
-		minimizer: [
-			// 在 webpack@5 中，你可以使用 `...` 语法来扩展现有的 minimizer（即 `terser-webpack-plugin`），将下一行取消注释
-			// `...`,
-			// 自定义配置压缩js的规则,不使用webpack5自带的压缩js规则
-			// https://github.com/webpack-contrib/terser-webpack-plugin#terseroptions
-			new TerserPlugin(),
-		],
-		// 告知 webpack 使用 TerserPlugin 或其它在 optimization.minimizer定义的插件压缩 bundle
-		// minimize: true,
-
-		// usedExports为true可以标记哪些代码使用了，哪些代码未被使用，压缩的时候标记为未被使用的就会被删除
-		// usedExports: true,
+		splitChunks: {
+			chunks: 'all', //默认作用于异步chunk，值为all/initial/async
+			minSize: 0, //默认值是30kb,代码块的最小尺寸
+			minChunks: 1, //被多少模块共享,在分割之前模块的被引用次数
+			maxAsyncRequests: 2, //限制异步模块内部的并行最大请求数的，说白了你可以理解为是每个import()它里面的最大并行请求数量
+			maxInitialRequests: 4, //限制入口的拆分数量
+			automaticNameDelimiter: '~', //默认webpack将会使用入口名和代码块的名称生成命名,比如 'vendors~main.js'
+			cacheGroups: {
+				//设置缓存组用来抽取满足不同规则的chunk,下面以生成common为例
+				vendors: {
+					name: 'chunk-vendors',
+					chunks: 'all',
+					test: /node_modules/, //条件
+					priority: -10, ///优先级，一个chunk很可能满足多个缓存组，会被抽取到优先级高的缓存组中,为了能够让自定义缓存组有更高的优先级(默认0),默认缓存组的priority属性为负值.
+				},
+				commons: {
+					name: 'chunk-common',
+					chunks: 'all',
+					minSize: 0, //最小提取字节数
+					minChunks: 2, //最少被几个chunk引用
+					priority: -20,
+				},
+			},
+		},
 	},
 };
 
