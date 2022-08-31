@@ -438,11 +438,11 @@ const config = {
 };
 ```
 
-### 3. 代码懒加载(按需加载)
+## 8. 代码懒加载(按需加载)
 
 针对首屏加载不太需要的一些资源，我们可以通过懒加载的方式去实现
 
-#### 1. webpack 的懒加载
+### 1. webpack 的懒加载
 
 `hello.js`
 
@@ -472,7 +472,7 @@ document.querySelector('#clickBtn').addEventListener('click', () => {
 `点击后加载的资源如下`
 ![点击前](https://cdn.nlark.com/yuque/0/2022/png/566044/1661909905065-990ed74e-3877-48f2-80c8-fe2ef83c35d6.png)
 
-#### 2. react 的懒加载
+### 2. react 的懒加载
 
 `index.js` 入口文件配置
 
