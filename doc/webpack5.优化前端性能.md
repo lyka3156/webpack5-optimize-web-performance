@@ -438,11 +438,11 @@ const config = {
 };
 ```
 
-### 3. 代码懒加载(按需加载)
+## 8. 代码懒加载(按需加载)
 
 针对首屏加载不太需要的一些资源，我们可以通过懒加载的方式去实现
 
-#### 1. webpack 的懒加载
+### 1. webpack 的懒加载
 
 `hello.js`
 
@@ -472,7 +472,7 @@ document.querySelector('#clickBtn').addEventListener('click', () => {
 `点击后加载的资源如下`
 ![点击前](https://cdn.nlark.com/yuque/0/2022/png/566044/1661909905065-990ed74e-3877-48f2-80c8-fe2ef83c35d6.png)
 
-#### 2. react 的懒加载
+### 2. react 的懒加载
 
 `index.js` 入口文件配置
 
@@ -549,11 +549,11 @@ export default (props) => {
 };
 ```
 
-### 4. prefetch 和 preload
+## 9. prefetch 和 preload
 
 上面我们使用异步加载的方式引入资源,假如我们需要异步加载的文件比较大,在点击的时候去加载也会影响用户的体验,这个时候可以考虑使用 prefetch 来进行预拉取
 
-#### 1. prefetch
+### 1. prefetch
 
 1.  概念:
 
@@ -599,7 +599,7 @@ document.querySelector('#clickBtn').addEventListener('click', () => {
 });
 ```
 
-#### 2. preload
+### 2. preload
 
 1. 概念:
 
@@ -631,7 +631,7 @@ import(
 );
 ```
 
-#### 3. 加载的优先级
+### 3. 加载的优先级
 
 -   一个资源的加载的优先级被分为五个级别,分别是
     -   Highest 最高
@@ -645,13 +645,13 @@ import(
     -   & Priorities Low
     -   in chrome Lowest
 
-#### 4. prefetch 和 preload 的区别
+### 4. prefetch 和 preload 的区别
 
 -   preload 是告诉浏览器页面必定需要的资源，浏览器一定会加载这些资源
 -   而 prefetch 是告诉浏览器页面可能需要的资源，浏览器不一定会加载这些资源
 -   所以建议：对于当前页面很有必要的资源使用 preload,对于可能在将来的页面中使用的资源使用 prefetch
 
-### 5. CDN
+## 10.CDN
 
 -   最影响用户体验的是网页首次打开时的加载等待。 导致这个问题的根本是网络传输过程耗时大，CDN 的作用就是加速网络传输。
 -   CDN 又叫内容分发网络，通过把资源部署到世界各地，用户在访问时按照就近原则从离用户最近的服务器获取资源，从而加速资源的获取速度
@@ -667,7 +667,7 @@ import(
     -   多个域名后会增加域名解析时间
     -   可以通过在 HTML HEAD 标签中 加入 去预解析域名，以降低域名解析带来的延迟
 
-#### 1 webpack.config.js
+### 1 webpack.config.js
 
 ```js
 const path = require("path");
@@ -805,7 +805,7 @@ module.exports = {
 };
 ```
 
-#### 2 UploadPlugin.js
+### 2 UploadPlugin.js
 
 -   自己实现一个插件,在文件打包完成将资源上传到服务器上去,然后静态资源通过 cdn 的方式引入
 
